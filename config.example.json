@@ -1,0 +1,8 @@
+{
+  "token": "VOTRE_TOKEN_DISCORD_ICI",
+  "prefix": "!",
+  "ban_role_id": 123456789012345678,
+  "database_path": "data/moderation.db",
+  "default_ban_limit": 5,
+  "default_reset_days": 30
+} 
