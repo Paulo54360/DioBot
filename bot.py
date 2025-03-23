@@ -6,6 +6,13 @@ import logging
 import json
 import sqlite3
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement depuis .env
+load_dotenv()
+
+# Récupérer le token depuis les variables d'environnement
+TokenBotDiscord = os.getenv('DISCORD_TOKEN')
 
 # Configuration du logging
 logging.basicConfig(
@@ -72,7 +79,7 @@ async def test_command(ctx):
 async def main():
     """Fonction principale qui démarre le bot."""
     # Get the Discord token from environment variable
-    token = os.getenv('DISCORD_TOKEN')
+    token = TokenBotDiscord
     if not token:
         logger.error("No Discord token found! Please set the DISCORD_TOKEN environment variable.")
         return
