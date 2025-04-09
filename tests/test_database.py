@@ -2,7 +2,7 @@ import unittest
 import sqlite3
 import os
 from datetime import datetime, timedelta
-from cogs.moderation.database import ModerationDB
+from cogs.moderation.database.database import ModerationDB
 
 class TestModerationDB(unittest.TestCase):
     """Tests pour la classe ModerationDB."""

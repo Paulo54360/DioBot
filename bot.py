@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 import asyncio
 import os
 import logging
@@ -31,7 +32,7 @@ intents.members = True  # Nécessaire pour accéder aux membres du serveur
 intents.message_content = True  # Nécessaire pour lire le contenu des messages
 
 # Création du bot
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="/", intents=intents)
 
 @bot.event
 async def on_ready():
@@ -44,10 +45,23 @@ async def on_ready():
     logger.info(f"Cogs chargés: {loaded_cogs}")
     
     # Afficher les commandes disponibles
-    commands_list = [command.name for command in bot.commands]
+    commands_list = [app_command.name for app_command in bot.commands]
     logger.info(f"Commandes disponibles: {commands_list}")
     
     logger.info("------")
+
+    admin_role_id = int(os.getenv('ADMIN_ROLE_ID', 0))
+    if admin_role_id == 0:
+        logger.warning("Aucun rôle admin configuré. Tous les utilisateurs pourront utiliser les commandes de modération.")
+    else:
+        logger.info(f"Rôle admin configuré avec l'ID : {admin_role_id}")
+
+    # Synchroniser les commandes slash
+    try:
+        synced = await bot.tree.sync()
+        logger.info(f"Commandes slash synchronisées: {len(synced)} commandes")
+    except Exception as e:
+        logger.error(f"Erreur lors de la synchronisation des commandes slash: {e}")
 
 async def load_extensions():
     """Charge tous les cogs du bot."""

@@ -1,89 +1,104 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import discord
 from discord.ext import commands
-from datetime import datetime, timedelta
-import asyncio
-from cogs.moderation.cog import ModerationCog
+from cogs.moderation.cog import ModerationCog  # Assurez-vous que le chemin est correct
 
-class TestModerationCommands(unittest.TestCase):
+class TestModerationCommands(unittest.IsolatedAsyncioTestCase):
     """Tests pour les commandes de modération."""
-    
+
     def setUp(self):
-        """Initialisation avant chaque test."""
-        # Créer un bot mock
+        """Configurer les mocks et l'environnement de test."""
         self.bot = MagicMock(spec=commands.Bot)
-        
-        # Patcher la classe ModerationDB
-        self.db_patcher = patch('cogs.moderation.database.ModerationDB')
-        self.mock_db_class = self.db_patcher.start()
-        self.mock_db = self.mock_db_class.return_value
-        
-        # Configurer le mock de la base de données
-        self.mock_db.init_database.return_value = True
-        
-        # Créer le cog avec le bot mock
-        self.cog = ModerationCog(self.bot)
-        
-        # Remplacer la base de données du cog par notre mock
-        self.cog.db = self.mock_db
-    
-    def tearDown(self):
-        """Nettoyage après chaque test."""
-        self.db_patcher.stop()
-    
-    def test_ban_member_success(self):
-        """Test de la commande ban_member avec succès."""
-        # Créer des mocks pour ctx, member, etc.
+        self.cog = ModerationCog(self.bot)  # Instanciez votre classe de commandes
+        self.mock_db = MagicMock()  # Simuler la base de données
+        self.cog.db = self.mock_db  # Assurez-vous que votre cog utilise le mock de la base de données
+
+    async def test_ban_member_by_admin(self):
+        """Test que la commande ban_member peut être utilisée par un administrateur."""
+        # Créer un mock pour ctx et member
         ctx = MagicMock(spec=commands.Context)
         member = MagicMock(spec=discord.Member)
-        guild = MagicMock(spec=discord.Guild)
-        author = MagicMock(spec=discord.Member)
-        ban_role = MagicMock(spec=discord.Role)
+        admin_role = MagicMock(spec=discord.Role)
         
         # Configurer les mocks
-        ctx.guild = guild
-        ctx.author = author
-        guild.get_role.return_value = ban_role
+        ctx.author = MagicMock(spec=discord.Member)
+        ctx.author.roles = [admin_role]
+        admin_role.permissions.administrator = True
         
-        # Corriger cette ligne
-        author.roles = [ban_role]  # Maintenant ban_role est dans la liste des rôles de l'auteur
-        
-        author.guild_permissions.administrator = False
-        member.guild_permissions.administrator = False
-        member.guild_permissions.ban_members = False
-        
-        # Configurer le mock de la base de données
-        reset_date = (datetime.utcnow() + timedelta(days=30)).isoformat()
+        # Simuler le comportement de la base de données
         self.mock_db.get_moderator_data.return_value = {
-            "user_id": author.id,
+            "user_id": ctx.author.id,
             "ban_limit": 5,
             "initial_limit": 10,
-            "reset_date": reset_date
+            "reset_date": "2023-12-31T23:59:59"
         }
         
-        # Configurer le mock de member.ban pour qu'il retourne une coroutine résolue
-        async def mock_ban(*args, **kwargs):
-            return None
-        member.ban = MagicMock(side_effect=mock_ban)
+        # Exécuter la commande
+        await self.cog.ban_member(ctx, member, reason="Test reason")
         
-        # Configurer le mock de ctx.send pour qu'il retourne une coroutine résolue
-        async def mock_send(*args, **kwargs):
-            return None
-        ctx.send = MagicMock(side_effect=mock_send)
-        
-        # Exécuter la coroutine ban_member
-        # Nous devons accéder à la méthode callback directement, pas à la commande
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.cog.ban_member.callback(self.cog, ctx, member, reason="Test reason"))
-        
-        # Vérifier que les méthodes attendues ont été appelées
+        # Vérifier que le ban a été effectué
         member.ban.assert_called_once()
         self.mock_db.add_ban_history.assert_called_once()
         self.mock_db.set_moderator_data.assert_called_once()
-        ctx.send.assert_called_once()
-    
-    # Ajoutez d'autres tests pour les commandes restantes...
 
-if __name__ == "__main__":
-    unittest.main() 
+    async def test_ban_count_increments(self):
+        """Test que le compteur de bans s'incrémente correctement."""
+        ctx = MagicMock(spec=commands.Context)
+        member = MagicMock(spec=discord.Member)
+        admin_role = MagicMock(spec=discord.Role)
+        
+        # Configurer les mocks
+        ctx.author = MagicMock(spec=discord.Member)
+        ctx.author.roles = [admin_role]
+        admin_role.permissions.administrator = True
+        
+        # Simuler le comportement de la base de données
+        self.mock_db.get_moderator_data.return_value = {
+            "user_id": ctx.author.id,
+            "ban_limit": 5,
+            "initial_limit": 10,
+            "reset_date": "2023-12-31T23:59:59"
+        }
+        
+        # Exécuter la commande de ban
+        await self.cog.ban_member(ctx, member, reason="Test reason")
+        
+        # Vérifier que le compteur de bans a été incrémenté
+        self.mock_db.set_moderator_data.assert_called_once_with(ctx.author.id, {
+            "ban_limit": 4,  # S'assurer que le compteur a été décrémenté
+            "initial_limit": 10,
+            "reset_date": "2023-12-31T23:59:59"
+        })
+
+    async def test_ban_count_reload(self):
+        """Test que le rechargement du nombre de bans fonctionne."""
+        ctx = MagicMock(spec=commands.Context)
+        member = MagicMock(spec=discord.Member)
+        admin_role = MagicMock(spec=discord.Role)
+        
+        # Configurer les mocks
+        ctx.author = MagicMock(spec=discord.Member)
+        ctx.author.roles = [admin_role]
+        admin_role.permissions.administrator = True
+        
+        # Simuler le comportement de la base de données
+        self.mock_db.get_moderator_data.return_value = {
+            "user_id": ctx.author.id,
+            "ban_limit": 5,
+            "initial_limit": 10,
+            "reset_date": "2023-12-31T23:59:59"
+        }
+        
+        # Exécuter la commande de rechargement
+        await self.cog.set_ban_limit(ctx, ctx.author, 10, 30)
+        
+        # Vérifier que le compteur de bans a été réinitialisé
+        self.mock_db.set_moderator_data.assert_called_once_with(ctx.author.id, {
+            "ban_limit": 10,  # S'assurer que le compteur a été réinitialisé
+            "initial_limit": 10,
+            "reset_date": "2023-12-31T23:59:59"
+        })
+
+if __name__ == '__main__':
+    unittest.main()
