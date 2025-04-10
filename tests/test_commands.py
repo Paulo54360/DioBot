@@ -1,104 +1,125 @@
 import unittest
-from unittest.mock import MagicMock
-import discord
-from discord.ext import commands
-from cogs.moderation.cog import ModerationCog  # Assurez-vous que le chemin est correct
+from unittest.mock import AsyncMock, MagicMock
+from discord import Member
+from cogs.moderation.commands.ban_commands import BanCommands
 
-class TestModerationCommands(unittest.IsolatedAsyncioTestCase):
-    """Tests pour les commandes de modération."""
+class TestBanCommands(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
-        """Configurer les mocks et l'environnement de test."""
-        self.bot = MagicMock(spec=commands.Bot)
-        self.cog = ModerationCog(self.bot)  # Instanciez votre classe de commandes
-        self.mock_db = MagicMock()  # Simuler la base de données
-        self.cog.db = self.mock_db  # Assurez-vous que votre cog utilise le mock de la base de données
+        self.bot = AsyncMock()
+        self.db = MagicMock()
+        self.ban_commands = BanCommands(self.bot, self.db)
 
-    async def test_ban_member_by_admin(self):
-        """Test que la commande ban_member peut être utilisée par un administrateur."""
-        # Créer un mock pour ctx et member
-        ctx = MagicMock(spec=commands.Context)
-        member = MagicMock(spec=discord.Member)
-        admin_role = MagicMock(spec=discord.Role)
-        
-        # Configurer les mocks
-        ctx.author = MagicMock(spec=discord.Member)
-        ctx.author.roles = [admin_role]
-        admin_role.permissions.administrator = True
-        
-        # Simuler le comportement de la base de données
-        self.mock_db.get_moderator_data.return_value = {
-            "user_id": ctx.author.id,
-            "ban_limit": 5,
-            "initial_limit": 10,
-            "reset_date": "2023-12-31T23:59:59"
-        }
-        
-        # Exécuter la commande
-        await self.cog.ban_member(ctx, member, reason="Test reason")
-        
-        # Vérifier que le ban a été effectué
-        member.ban.assert_called_once()
-        self.mock_db.add_ban_history.assert_called_once()
-        self.mock_db.set_moderator_data.assert_called_once()
+    async def test_ban_member_success(self):
+        interaction = AsyncMock()
+        member = AsyncMock(spec=Member)
+        member.id = 123
+        member.name = "TestUser"
+        interaction.user.id = 456
+        interaction.guild.ban = AsyncMock()
+        interaction.guild.me.guild_permissions.ban_members = True
+        interaction.response.send_message = AsyncMock()
 
-    async def test_ban_count_increments(self):
-        """Test que le compteur de bans s'incrémente correctement."""
-        ctx = MagicMock(spec=commands.Context)
-        member = MagicMock(spec=discord.Member)
-        admin_role = MagicMock(spec=discord.Role)
-        
-        # Configurer les mocks
-        ctx.author = MagicMock(spec=discord.Member)
-        ctx.author.roles = [admin_role]
-        admin_role.permissions.administrator = True
-        
-        # Simuler le comportement de la base de données
-        self.mock_db.get_moderator_data.return_value = {
-            "user_id": ctx.author.id,
-            "ban_limit": 5,
-            "initial_limit": 10,
-            "reset_date": "2023-12-31T23:59:59"
-        }
-        
-        # Exécuter la commande de ban
-        await self.cog.ban_member(ctx, member, reason="Test reason")
-        
-        # Vérifier que le compteur de bans a été incrémenté
-        self.mock_db.set_moderator_data.assert_called_once_with(ctx.author.id, {
-            "ban_limit": 4,  # S'assurer que le compteur a été décrémenté
-            "initial_limit": 10,
-            "reset_date": "2023-12-31T23:59:59"
-        })
+        self.db.get_moderator_data.return_value = {"ban_limit": 1, "reset_date": None}
+        self.db.update_moderator_ban_limit = AsyncMock()
+        self.db.add_ban_to_history = AsyncMock()
 
-    async def test_ban_count_reload(self):
-        """Test que le rechargement du nombre de bans fonctionne."""
-        ctx = MagicMock(spec=commands.Context)
-        member = MagicMock(spec=discord.Member)
-        admin_role = MagicMock(spec=discord.Role)
-        
-        # Configurer les mocks
-        ctx.author = MagicMock(spec=discord.Member)
-        ctx.author.roles = [admin_role]
-        admin_role.permissions.administrator = True
-        
-        # Simuler le comportement de la base de données
-        self.mock_db.get_moderator_data.return_value = {
-            "user_id": ctx.author.id,
-            "ban_limit": 5,
-            "initial_limit": 10,
-            "reset_date": "2023-12-31T23:59:59"
-        }
-        
-        # Exécuter la commande de rechargement
-        await self.cog.set_ban_limit(ctx, ctx.author, 10, 30)
-        
-        # Vérifier que le compteur de bans a été réinitialisé
-        self.mock_db.set_moderator_data.assert_called_once_with(ctx.author.id, {
-            "ban_limit": 10,  # S'assurer que le compteur a été réinitialisé
-            "initial_limit": 10,
-            "reset_date": "2023-12-31T23:59:59"
-        })
+        await self.ban_commands.ban_member(interaction, member)
 
-if __name__ == '__main__':
+        interaction.guild.ban.assert_called_once_with(member, reason=None)
+        self.db.update_moderator_ban_limit.assert_called_once_with(456, 0)
+        self.db.add_ban_to_history.assert_called_once_with(456, 123, "TestUser", None)
+        interaction.response.send_message.assert_called_once_with("✅ TestUser a été banni.")
+
+    async def test_ban_member_no_permission(self):
+        interaction = AsyncMock()
+        member = AsyncMock(spec=Member)
+        interaction.user.id = 456
+        interaction.guild.me.guild_permissions.ban_members = False
+        interaction.response.send_message = AsyncMock()
+
+        await self.ban_commands.ban_member(interaction, member)
+
+        interaction.response.send_message.assert_called_once_with("❌ Je n'ai pas les permissions nécessaires pour bannir ce membre.")
+
+    async def test_ban_member_limit_reached(self):
+        interaction = AsyncMock()
+        member = AsyncMock(spec=Member)
+        interaction.user.id = 456
+        interaction.guild.ban = AsyncMock()
+        interaction.guild.me.guild_permissions.ban_members = True
+        interaction.response.send_message = AsyncMock()
+
+        self.db.get_moderator_data.return_value = {"ban_limit": 0, "reset_date": None}
+
+        await self.ban_commands.ban_member(interaction, member)
+
+        interaction.response.send_message.assert_called_once_with("❌ Vous avez atteint votre limite de bans pour cette période.")
+
+    async def test_set_ban_success(self):
+        interaction = AsyncMock()
+        user = AsyncMock(spec=Member)
+        user.id = 123
+        user.display_name = "TestUser"
+        interaction.user.roles = [MagicMock(id=1)]  # Simulating admin role
+        interaction.response.send_message = AsyncMock()
+
+        self.db.set_moderator_data.return_value = True
+
+        await self.ban_commands.set_ban(interaction, user, 5, 7)
+
+        self.db.set_moderator_data.assert_called_once_with(123, 5, 5, Any, "TestUser")
+        interaction.response.send_message.assert_called_once_with("✅ Le nombre de bans pour TestUser a été défini à 5 avec un timer de réinitialisation de 7 jours.")
+
+    async def test_set_ban_no_permission(self):
+        interaction = AsyncMock()
+        user = AsyncMock(spec=Member)
+        interaction.user.roles = []  # No admin role
+        interaction.response.send_message = AsyncMock()
+
+        await self.ban_commands.set_ban(interaction, user, 5, 7)
+
+        interaction.response.send_message.assert_called_once_with("❌ Vous n'avez pas la permission de définir des bans.")
+
+    async def test_ban_history(self):
+        interaction = AsyncMock()
+        interaction.user.id = 456
+        interaction.response.send_message = AsyncMock()
+        self.db.get_all_ban_history.return_value = [(1, 456, 123, "TestUser", "Violation", "2023-10-01")]
+
+        await self.ban_commands.ban_history(interaction)
+
+        interaction.response.send_message.assert_called_once()
+        self.assertIn("Historique des bans :", interaction.response.send_message.call_args[0][0])
+
+    async def test_ban_history_no_records(self):
+        interaction = AsyncMock()
+        interaction.user.id = 456
+        interaction.response.send_message = AsyncMock()
+        self.db.get_all_ban_history.return_value = []
+
+        await self.ban_commands.ban_history(interaction)
+
+        interaction.response.send_message.assert_called_once_with("❌ Aucun historique de bans trouvé.")
+
+    async def test_ban_limits(self):
+        interaction = AsyncMock()
+        interaction.response.send_message = AsyncMock()
+        self.db.get_all_moderators_with_ban_limits.return_value = [("TestUser", 5, "2023-10-01T00:00:00")]
+
+        await self.ban_commands.ban_limits(interaction)
+
+        interaction.response.send_message.assert_called_once()
+        self.assertIn("Liste des bans restants pour les modérateurs :", interaction.response.send_message.call_args[0][0])
+
+    async def test_ban_limits_no_moderators(self):
+        interaction = AsyncMock()
+        interaction.response.send_message = AsyncMock()
+        self.db.get_all_moderators_with_ban_limits.return_value = []
+
+        await self.ban_commands.ban_limits(interaction)
+
+        interaction.response.send_message.assert_called_once_with("❌ Aucun modérateur trouvé.")
+
+if __name__ == "__main__":
     unittest.main()

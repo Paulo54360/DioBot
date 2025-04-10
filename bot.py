@@ -4,7 +4,7 @@ import logging
 import os
 import asyncio
 from dotenv import load_dotenv
-
+from keep_alive import keep_alive
 # Charger les variables d'environnement depuis .env
 load_dotenv()
 
@@ -49,6 +49,7 @@ async def on_ready():
 
 # Fonction principale asynchrone
 async def main():
+    keep_alive()
     await load_extensions()
     await bot.start(TOKEN)
 
