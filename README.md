@@ -5,37 +5,27 @@ Un bot Discord conçu pour aider à la modération des serveurs Discord, avec de
 ## Fonctionnalités
 
 - **Système de bannissement avec limites configurables par modérateur**
-  - `!ban <membre> [raison]` - Bannir un membre du serveur
+  - `/ban <membre> [raison]` - Bannir un membre du serveur
   
 - **Gestion des modérateurs**
-  - `!set_mod_limit <modérateur> <limite> [limite_initiale] [jours_reset]` - Définir la limite de bannissements pour un modérateur
-  - `!mod_status [modérateur]` - Afficher le statut d'un modérateur ou de tous les modérateurs
+  - `/setban <membre> <nombre_bans_initial> <jours_reset>` - Définir le nombre de bans et le timer de réinitialisation pour un modérateur
   
 - **Suivi des actions de modération**
-  - Enregistrement automatique de chaque bannissement
-  - `!ban_history [modérateur] [limite]` - Afficher l'historique des bannissements
+  - `/banhistory [membre]` - Afficher l'historique des bans pour un utilisateur spécifique ou pour tous les utilisateurs
   
-- **Réinitialisation automatique des limites de bannissement**
-  - Réinitialisation périodique configurable des limites de bannissement
-  - Paramétrage flexible de la période de réinitialisation
-
-- **Interface de commandes intuitive**
-  - Commandes simples avec préfixe personnalisable
-  - Messages d'erreur clairs et informatifs
-  
-- **Commande de test**
-  - `!test` - Vérifier que le bot fonctionne correctement
+- **Affichage des limites de bans**
+  - `/banlimits` - Affiche la liste des bans restants pour tous les modérateurs, ainsi que le temps restant avant la réinitialisation des bans.
 
 ## Permissions
 
 Toutes les commandes de modération sont restreintes aux utilisateurs ayant le rôle admin. Pour configurer ce rôle :
 
-1. Créez un rôle admin sur votre serveur Discord
+1. Créez un rôle admin sur votre serveur Discord.
 2. Ajoutez l'ID du rôle dans le fichier `.env` :
    ```
    ADMIN_ROLE_ID=id_du_role_admin
    ```
-3. Attribuez ce rôle aux utilisateurs qui doivent avoir accès aux commandes de modération
+3. Attribuez ce rôle aux utilisateurs qui doivent avoir accès aux commandes de modération.
 
 ## Installation
 
@@ -57,41 +47,26 @@ Toutes les commandes de modération sont restreintes aux utilisateurs ayant le r
      BAN_ROLE_ID=id_du_role_moderateur
      ADMIN_ROLE_ID=id_du_role_admin
      ```
-   - Remplacez les valeurs par vos propres informations
+   - Remplacez les valeurs par vos propres informations.
 
 4. Lancez le bot :
    ```
    python bot.py
    ```
 
-## Commandes
+## Cogs
 
-- `!ban <membre> [raison]` - Bannir un membre
-- `!ban_history [modérateur] [limite]` - Afficher l'historique des bannissements
-- `!set_mod_limit <modérateur> <limite> [limite_initiale] [jours_reset]` - Définir la limite de bannissements pour un modérateur
-- `!mod_status [modérateur]` - Afficher le statut d'un modérateur ou de tous les modérateurs
-- `!test` - Vérifier que le bot fonctionne correctement
+Le bot utilise des cogs pour organiser les commandes et la logique. Chaque cog est un module qui regroupe des fonctionnalités spécifiques. Par exemple, le cog `ban_commands.py` contient toutes les commandes liées à la gestion des bans.
+
+### Structure des Fichiers
+
+- **`cogs/moderation/commands/ban_commands.py`** : Contient les commandes de modération liées aux bans, y compris `/ban`, `/setban`, `/banhistory`, et `/banlimits`.
+- **`cogs/moderation/database/database.py`** : Gère les interactions avec la base de données, y compris la récupération et la mise à jour des données des modérateurs et des bans.
+- **`bot.py`** : Point d'entrée du bot, où le bot est initialisé et les cogs sont chargés.
 
 ## Tests
 
 Le projet inclut une suite complète de tests unitaires pour garantir le bon fonctionnement du bot.
 
 Pour exécuter les tests unitaires :
-```bash
-python run_tests.py
 ```
-
-Les tests vérifient :
-- Le fonctionnement des commandes de modération
-- La gestion de la base de données
-- Les utilitaires et fonctions auxiliaires
-- La réinitialisation des limites de bannissement
-
-Pour générer un rapport de test détaillé :
-```bash
-python run_tests.py --report
-```
-
-## Licence
-
-Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails. 
