@@ -1,4 +1,5 @@
 from .cog import setup
+from .database import ModerationDB
 
 # Cette ligne est importante pour que Discord.py puisse charger le cog
 

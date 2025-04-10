@@ -3,7 +3,7 @@ from discord.ext import commands
 import logging
 from .commands.ban_commands import BanCommands
 from .commands.utilities_commands import UtilitiesCommands
-from .database.moderation_db import ModerationDB
+from .database import ModerationDB
 
 logger = logging.getLogger("moderation")
 
@@ -26,4 +26,5 @@ async def setup(bot):
     """Ajoute le cog de modération au bot."""
     db = ModerationDB("moderation.db")
     db.init_database()
+    await bot.add_cog(ModerationCog(bot))
     await bot.add_cog(BanCommands(bot, db))
