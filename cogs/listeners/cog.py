@@ -1,7 +1,9 @@
 import discord
 from discord.ext import commands
 import logging
-from .messages import MessageCreate
+from .messages import MessageCreate, MessageDelete
+
+
 
 logger = logging.getLogger("listeners")
 
@@ -14,6 +16,7 @@ class ListenersCog(commands.Cog):
     async def setup(self):
         """Charge les listeners."""
         await self.bot.add_cog(MessageCreate(self.bot))
+        await self.bot.add_cog(MessageDelete(self.bot))
         logger.info("ListenersCog ajouté au bot")
 
 async def setup(bot):

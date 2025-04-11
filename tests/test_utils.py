@@ -2,8 +2,8 @@ import unittest
 from datetime import datetime, timedelta
 import sqlite3
 import os
-from cogs.moderation.utils import check_and_reset_limit, format_date
-from cogs.moderation.database.database import ModerationDB
+from cogs.utils import check_and_reset_limit, format_date
+from cogs.database.database import ModerationDB
 
 class TestUtils(unittest.TestCase):
     """Tests pour les fonctions utilitaires."""

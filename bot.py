@@ -26,9 +26,9 @@ bot = commands.Bot(command_prefix="/", intents=intents)
 async def load_extensions():
     """Charge tous les cogs du bot."""
     try:
-        await bot.load_extension("cogs.moderation")
+        await bot.load_extension("cogs.commands")
         await bot.load_extension("cogs.listeners")
-        logger.info("Module de modération chargé.")
+        logger.info("Module chargés.")
     except Exception as e:
         logger.error(f"Erreur lors du chargement du module de modération: {e}")
 
