@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
 import logging
-from .commands.ban_commands import BanCommands
-from .commands.utilities_commands import UtilitiesCommands
-from .database import ModerationDB
+from .moderation.ban.ban_commands import BanCommands
+from .moderation.ban.utilities_commands import UtilitiesCommands
+from cogs.database import ModerationDB
 
 logger = logging.getLogger("moderation")
 

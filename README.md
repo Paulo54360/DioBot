@@ -60,8 +60,9 @@ Le bot utilise des cogs pour organiser les commandes et la logique. Chaque cog e
 
 ### Structure des Fichiers
 
-- **`cogs/moderation/commands/ban_commands.py`** : Contient les commandes de modération liées aux bans, y compris `/ban`, `/setban`, `/banhistory`, et `/banlimits`.
-- **`cogs/moderation/database/database.py`** : Gère les interactions avec la base de données, y compris la récupération et la mise à jour des données des modérateurs et des bans.
+- **`cogs/commands/moderation/banban_commands.py`** : Contient les commandes de modération liées aux bans, y compris `/ban`, `/setban`, `/banhistory`, et `/banlimits`.
+- **`cogs/database/database.py`** : Gère les interactions avec la base de données, y compris la récupération et la mise à jour des données des modérateurs et des bans.
+- **`cogs/listeners/messages`** : Contient les evenements liées au messages, y compris  `MessageCreate` et `MessageDelete`.
 - **`bot.py`** : Point d'entrée du bot, où le bot est initialisé et les cogs sont chargés.
 
 ## Tests

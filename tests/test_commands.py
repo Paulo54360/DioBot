@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import AsyncMock, MagicMock
 from discord import Member
-from cogs.moderation.commands.ban_commands import BanCommands
+from cogs.commands.moderation.ban.ban_commands import BanCommands
 
 class TestBanCommands(unittest.IsolatedAsyncioTestCase):
 
