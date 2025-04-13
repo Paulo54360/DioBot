@@ -1,73 +1,120 @@
+Voici une version corrigée et améliorée du fichier `.md` :
+
 # DioBot - Bot Discord de Modération
 
-Un bot Discord conçu pour aider à la modération des serveurs Discord, avec des fonctionnalités de gestion des bannissements et de suivi des actions de modération.
+Un bot Discord conçu pour aider à la modération des serveurs Discord, avec des fonctionnalités avancées de gestion des bannissements et de suivi des actions de modération.
+
+---
 
 ## Fonctionnalités
 
-- **Système de bannissement avec limites configurables par modérateur**
-  - `/ban <membre> [raison]` - Bannir un membre du serveur
-  
-- **Gestion des modérateurs**
-  - `/setban <membre> <nombre_bans_initial> <jours_reset>` - Définir le nombre de bans et le timer de réinitialisation pour un modérateur
-  
-- **Suivi des actions de modération**
-  - `/banhistory [membre]` - Afficher l'historique des bans pour un utilisateur spécifique ou pour tous les utilisateurs
-  
-- **Affichage des limites de bans**
-  - `/banlimits` - Affiche la liste des bans restants pour tous les modérateurs, ainsi que le temps restant avant la réinitialisation des bans.
+### 🛡️ Système de bannissement intelligent
+- **`/ban <membre> [raison]`**  
+  Bannir un membre du serveur avec un système de quotas configurables
 
-## Permissions
+### 👮 Gestion des modérateurs
+- **`/setban <membre> <nombre_bans_initial> <jours_reset>`**  
+  Configurer les limites de bannissement par modérateur
 
-Toutes les commandes de modération sont restreintes aux utilisateurs ayant le rôle admin. Pour configurer ce rôle :
+### 📊 Suivi des actions
+- **`/banhistory [membre]`**  
+  Afficher l'historique complet des bannissements (spécifique ou global)
 
-1. Créez un rôle admin sur votre serveur Discord.
-2. Ajoutez l'ID du rôle dans le fichier `.env` :
+### ⏱️ Contrôle des limites
+- **`/banlimits`**  
+  Visualiser les quotas restants et le temps avant réinitialisation
+
+---
+
+## 🔒 Permissions
+
+Toutes les commandes de modération nécessitent le rôle administrateur.
+
+**Configuration :**
+1. Créez un rôle admin sur votre serveur
+2. Ajoutez l'ID dans `.env` :
+   ```env
+   ADMIN_ROLE_ID=votre_id_ici
    ```
-   ADMIN_ROLE_ID=id_du_role_admin
-   ```
-3. Attribuez ce rôle aux utilisateurs qui doivent avoir accès aux commandes de modération.
+3. Attribuez ce rôle aux modérateurs
 
-## Installation
+---
 
-1. Clonez ce dépôt :
-   ```
-   git clone https://github.com/votre-username/diobot.git
-   cd diobot
-   ```
+## 🛠️ Installation
 
-2. Installez les dépendances :
-   ```
-   pip install -r requirements.txt
-   ```
+### Prérequis
+- Python 3.8+
+- Compte Discord Developer
 
-3. Configurez le bot :
-   - Créez un fichier `.env` à la racine du projet avec le contenu suivant :
-     ```
-     DISCORD_TOKEN=votre_token_discord_ici
-     BAN_ROLE_ID=id_du_role_moderateur
-     ADMIN_ROLE_ID=id_du_role_admin
-     ```
-   - Remplacez les valeurs par vos propres informations.
-
-4. Lancez le bot :
-   ```
-   python bot.py
-   ```
-
-## Cogs
-
-Le bot utilise des cogs pour organiser les commandes et la logique. Chaque cog est un module qui regroupe des fonctionnalités spécifiques. Par exemple, le cog `ban_commands.py` contient toutes les commandes liées à la gestion des bans.
-
-### Structure des Fichiers
-
-- **`cogs/commands/moderation/banban_commands.py`** : Contient les commandes de modération liées aux bans, y compris `/ban`, `/setban`, `/banhistory`, et `/banlimits`.
-- **`cogs/database/database.py`** : Gère les interactions avec la base de données, y compris la récupération et la mise à jour des données des modérateurs et des bans.
-- **`cogs/listeners/messages`** : Contient les evenements liées au messages, y compris  `MessageCreate` et `MessageDelete`.
-- **`bot.py`** : Point d'entrée du bot, où le bot est initialisé et les cogs sont chargés.
-
-## Tests
-
-Le projet inclut une suite complète de tests unitaires pour garantir le bon fonctionnement du bot.
-
-Pour exécuter les tests unitaires :
+### Étapes :
+```bash
+git clone https://github.com/Paulo54360/DioBot.git
+cd DioBot
+pip install -r requirements.txt
 ```
+
+### Configuration
+Créez/modifiez le fichier `.env` :
+```env
+DISCORD_TOKEN=votre_token
+BAN_ROLE_ID=id_moderateur
+ADMIN_ROLE_ID=id_admin
+```
+
+### Lancement
+```bash
+python bot.py
+```
+
+---
+
+## 🧩 Architecture
+
+### Structure des Cogs
+```
+DioBot/
+├── cogs/
+│   ├── listeners/messages/      # Événements messages
+│   ├── moderation/commands/     # Commandes de modération
+│   └── moderation/database/     # Gestion base de données
+```
+
+### Fichiers Principaux
+- **`bot.py`** : Point d'entrée principal
+- **`ban_commands.py`** : Commandes de bannissement
+- **`database.py`** : Interactions avec la DB
+
+---
+
+## 🧪 Tests
+
+Suite de tests complète couvrant :
+- Commandes
+- Base de données
+- Événements
+- Utilitaires
+
+### Exécution
+```bash
+python run_tests.py
+```
+
+### Structure des Tests
+```
+tests/
+├── conftest.py
+├── test_commands.py
+├── test_database.py
+├── test_listeners.py
+└── test_utils.py
+```
+
+### Rapports
+Les résultats sont générés au format HTML dans :
+```
+test-reports/
+```
+
+---
+
+> **Note** : Le bot nécessite les permissions `BAN_MEMBERS` et `VIEW_AUDIT_LOG` pour fonctionner correctement.
