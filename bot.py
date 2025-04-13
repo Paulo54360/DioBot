@@ -27,6 +27,7 @@ async def load_extensions():
     """Charge tous les cogs du bot."""
     try:
         await bot.load_extension("cogs.moderation")
+        await bot.load_extension("cogs.listeners")
         logger.info("Module de modération chargé.")
     except Exception as e:
         logger.error(f"Erreur lors du chargement du module de modération: {e}")
@@ -39,6 +40,7 @@ async def on_ready():
     try:
         synced = await bot.tree.sync()
         logger.info(f"Commandes synchronisées: {len(synced)}")
+
 
         # Afficher uniquement les détails des commandes synchronisées
         for command in synced:
@@ -55,4 +57,14 @@ async def main():
 
 # Lancement du bot
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        # Lance la boucle d'événements asyncio avec la fonction main
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        # Gère l'arrêt manuel (Ctrl+C)
+        logger.info("Arrêt du bot demandé par l'utilisateur (KeyboardInterrupt).")
+    except discord.LoginFailure:
+        logger.critical("ERREUR CRITIQUE: Échec de la connexion - Token Discord invalide.")
+    except Exception as e:
+        # Attrape toute autre erreur critique non gérée pendant l'exécution
+        logger.critical(f"Erreur critique non gérée lors de l'exécution du bot:", exc_info=e)
