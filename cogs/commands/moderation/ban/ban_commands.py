@@ -6,7 +6,7 @@ import os
 import sqlite3
 import logging
 
-from cogs.moderation.database.database import ModerationDB
+from cogs.database.database import ModerationDB
 
 logger = logging.getLogger(__name__)
 
