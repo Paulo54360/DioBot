@@ -60,7 +60,7 @@ The workflow automatically filters out Azure CLI noise messages including:
 - "This is a sample script"
 - "Optional parameters"
 - "Enable succeeded"
-- "[std" messages (stdout/stderr markers)
+- "[std" messages (filters out `[stdout]` and `[stderr]` markers from Azure CLI output)
 
 This ensures clean, readable diagnostic output.
 
@@ -79,6 +79,7 @@ When successful, you'll see output similar to:
 
 ```
 📋 Collecte des diagnostics depuis la VM...
+(Note: This message is in French as it matches the project's locale)
 
 ==========================================
 == cloud-init status ==
